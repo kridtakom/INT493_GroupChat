@@ -21,9 +21,11 @@ public class Client {
         Scanner scanner = new Scanner(System.in);
         InetAddress ip = null;
         try {
-            ip = InetAddress.getByName("localhost"); // Localhost
+            ip = InetAddress.getByName("localhost");
             System.out.print("Enter your name : ");
             String name = scanner.nextLine();
+
+            // create client
             socket = new Socket(ip, 8080);
             try {
                 input = new DataInputStream(socket.getInputStream());
@@ -33,12 +35,14 @@ public class Client {
             }
 
             try {
+                // send client name to server
                 output.writeUTF(name);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("Error sending username to server");
             }
 
+            // create thread for read and write for a client that able to read and write message
             write_messages = new Write_Messages(output);
             read_messages = new Read_Messages(input);
 
@@ -73,13 +77,19 @@ class Write_Messages implements Runnable {
     @Override
     public void run() {
         Scanner scanner = new Scanner(System.in);
+
         while (true) {
+
+            // get message form client console
             String line_to_send = scanner.nextLine();
+
             if (line_to_send.equals("exit")) {
                 Client.setAlive(false);
             }
             try {
+                //send 'exit' to server to close connection
                 output.writeUTF(line_to_send);
+
             } catch (IOException e) {
                 System.out.println("An error occurred while trying to send '" + line_to_send + "' to the SERVER");
                 e.printStackTrace();
@@ -99,6 +109,7 @@ class Read_Messages implements Runnable {
     public void run() {
 
         while (true) {
+            // check if alive false client was close input thread
             if (!Client.isAlive()) {
                 try {
                     input.close();
@@ -108,6 +119,7 @@ class Read_Messages implements Runnable {
                 break;
             } else {
                 try {
+                    // get message from client and print
                     String line_to_read = input.readUTF();
                     System.out.println(line_to_read);
                 } catch (IOException e) {
@@ -118,3 +130,5 @@ class Read_Messages implements Runnable {
         }
     }
 }
+
+// ref: https://github.com/QuiquePosada/Java-Console-Chat-App 
