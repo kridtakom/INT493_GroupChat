@@ -44,7 +44,7 @@ public class Server {
                 clientThread = new Thread(client);
                 client_list.add(client);
                 clientThread.start();
-                messageAll("============================== New client join chat room " + client.getName()+" ============================================");
+                messageAll("============================== New client join chat room " + client.getName() + " ============================================", -1);
             } catch (IOException e) {
                 socket.close();
                 for (int i = 0; i < client_list.size(); i++) {
@@ -64,7 +64,7 @@ public class Server {
     public static synchronized void disconnect_from_Server(int user_id) {
         ClientThread client_to_close = client_list.get(user_id);
         try {
-            client_to_close.output.writeUTF("================================= Disconnected From SERVER! : " + client_to_close.getName()+"\nYou can close console ===============================================");
+            client_to_close.output.writeUTF("================================= Disconnected From SERVER! : " + client_to_close.getName() + "\nYou can close console ===============================================");
             client_to_close.input.close();
             client_to_close.output.close();
             client_to_close.socket.close();
@@ -78,11 +78,13 @@ public class Server {
 
     // func. broadcasts to all client
     // this func. will get all client and sent message that get from a client to all client
-    public static synchronized void messageAll(String s) {
+    public static synchronized void messageAll(String s, int user_id) {
         for (int i = 0; i < client_list.size(); i++) {
             ClientThread client_to_recieve = client_list.get(i);
             try {
-                client_to_recieve.output.writeUTF(s);
+                if (client_to_recieve.getUserId() != user_id || user_id == -1) {
+                    client_to_recieve.output.writeUTF(s);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -123,6 +125,10 @@ class ClientThread implements Runnable {
         return name;
     }
 
+    public int getUserId() {
+        return user_id;
+    }
+
     // this func. manage message from client and broadcast
     @Override
     public void run() {
@@ -133,17 +139,15 @@ class ClientThread implements Runnable {
                 if (line.equals("exit")) {
                     System.out.println("Closing connection for " + getName());
                     Server.disconnect_from_Server(user_id);
-                    Server.messageAll("============================"+" now "+getName()+" leave chat"+" ===================================");
+                    Server.messageAll("============================" + " now " + getName() + " leave chat" + " ===================================", -1);
                     break;
                 } else if (!line.equals("exit")) {
                     String newline = getName() + " : " + line;
-                    Server.messageAll(newline);
+                    Server.messageAll(newline,user_id);
                 }
             } catch (IOException i) {
                 System.out.println(i);
             }
         }
     }
-
-
 }
